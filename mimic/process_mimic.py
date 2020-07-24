@@ -159,7 +159,7 @@ def get_chartevents_ids(input_dir="data_raw/mimic"):
     all_chartevents = [ChartEvent("tobacco", [227687, 225108], [mv, mv], lambda x: 0 if x in ["0", "Never used"] else 1,)]
 
     # Add all numeric chartevent from variable.csv
-    variable_df = pd.read_csv("data_raw/mimic/variables.csv")
+    variable_df = pd.read_csv("data_raw/variables.csv")
     for index, row in variable_df.iterrows():
         # Only include chartevents and numerics
         if row["LINKSTO"] == "chartevents":
@@ -330,11 +330,10 @@ def get_first_data(df, output_file=None):
 
     return first
 
-def create_merged():
+def create_merged(input_dir="data_raw"):
     '''Do all steps up to merge'''
     configure_logging()
 
-    input_dir = "data_raw/mimic_full" if os.path.exists("data_raw/mimic_full") else "/Users/garethbooth/Data/mimiciii"
     logging.info("Starting preprocessing of MIMIC data")
 
     df_items = load_chartevents(input_dir=input_dir, output_file="data_processed/mimic_chartevents.csv")
@@ -351,23 +350,7 @@ def create_merged():
     return get_merged_data(df_day, df_patient, df_proc, df_diagnoses, output_file="data_processed/mimic_processed.csv")
 
 if __name__ == "__main__":
-    configure_logging()
-
-    input_dir = "data_raw/mimic_full" if os.path.exists("data_raw/mimic_full") else "/Users/garethbooth/Data/mimiciii"
-    logging.info("Starting preprocessing of MIMIC data")
-
-    df_items = load_chartevents(input_dir=input_dir, output_file="data_processed/mimic_chartevents.csv")
-    df_day = create_day_blocks(df_items, output_file="data_processed/mimic_day_blocks.csv")
-
-    df_day = add_derived_columns(df_day)
-
-    df_patient = get_admission_details(input_dir=input_dir, output_file="data_processed/mimic_admission_info.csv")
-
-    df_proc = get_all_procedures(input_dir=input_dir, output_file="data_processed/mimic_procedures.csv")
-
-    df_diagnoses = get_all_diagnoses(input_dir=input_dir, output_file="data_processed/mimic_diagnoses.csv")
-
-    df_merged = get_merged_data(df_day, df_patient, df_proc, df_diagnoses, output_file="data_processed/mimic_processed.csv")
+    df_merged = create_merged()
 
     # Add in procedure data - ventilation, ecmo, incubation
     df_first = get_first_data(df_merged, output_file="data_processed/mimic_first.csv")

@@ -1,2 +1,6 @@
-# *.csv
+*.csv
 *.csv.gz
+.ipynb_checkpoints
+__pycache__
+saved_models
+.DS_Store
