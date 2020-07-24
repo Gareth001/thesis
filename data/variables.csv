@@ -1,0 +1,110 @@
+Name,ROW_ID,ITEMID,LABEL,ABBREVIATION,DBSOURCE,LINKSTO,UNITNAME,PARAM_TYPE,CONCEPTID
+
+CRP,14758,227444,C Reactive Protein (CRP),C Reactive Protein (CRP),metavision,chartevents,None,Numeric,
+Haemoglobin,12742,220228,Hemoglobin,Hemoglobin,metavision,chartevents,g/dl,Numeric,
+Lymphocyte_count,12298,70052,PERIPHERAL BLOOD LYMPHOCYTES,,hospital,microbiologyevents,,,
+AST,2902,3801,SGOT,,carevue,chartevents,,Numeric,
+Systolic_BP,12716,220050,Arterial Blood Pressure systolic,ABPs,metavision,chartevents,mmHg,Numeric,
+Diabetes,14684,227007,Diabetes,Diabetes,metavision,chartevents,,Checkbox,
+PaCO2,12743,220235,Arterial CO2 Pressure,PCO2 (Arterial),metavision,chartevents,mmHg,Numeric,
+apache2,14504,226743,APACHE II,APACHE II,metavision,chartevents,None,Numeric,
+sofa,14750,227428,SOFA Score,SOFA Score,metavision,chartevents,None,Numeric,
+
+Platelet_count,4082,6256,Platelet Count,,carevue,chartevents,,Numeric,
+Platelet_count,14771,227457,Platelet Count,Platelet Count,metavision,chartevents,None,Numeric,
+
+ALT,12704,220644,ALT,ALT,metavision,chartevents,None,Numeric,
+ALT,690,769,ALT,,carevue,chartevents,,Numeric,
+
+Bilirubin,1713,4948,Bilirubin,,carevue,chartevents,,Numeric,
+Bilirubin,14675,226998,Bilirubin_ApacheIV,Bilirubin_ApacheIV,metavision,chartevents,None,Numeric,
+
+Creatinine,2977,1525,Creatinine,,carevue,chartevents,,Numeric,
+Creatinine,12698,220615,Creatinine,Creatinine,metavision,chartevents,None,Numeric,
+
+Sodium,2988,1536,Sodium,,carevue,chartevents,,Numeric,
+Sodium,12705,220645,Sodium (serum),Sodium (serum),metavision,chartevents,None,Numeric,
+
+Potassium,2987,1535,Potassium,,carevue,chartevents,,Numeric,
+Potassium,14756,227442,Potassium (serum),Potassium (serum),metavision,chartevents,None,Numeric,
+
+HR,12712,220045,Heart Rate,HR,metavision,chartevents,bpm,Numeric,
+HR,212,211,Heart Rate,,carevue,chartevents,,Numeric,
+
+RR,12738,220210,Respiratory Rate,RR,metavision,chartevents,insp/min,Numeric,
+RR,575,618,Respiratory Rate,,carevue,chartevents,,Numeric,
+
+Diastolic_BP,13688,225310,ART BP Diastolic,ART BP Diastolic,metavision,chartevents,mmHg,Numeric,
+Diastolic_BP,12717,220051,Arterial Blood Pressure diastolic,ABPd,metavision,chartevents,mmHg,Numeric,
+
+Mean Arterial Pressure,58,52,Arterial BP Mean,,carevue,chartevents,,Numeric,
+Mean Arterial Pressure,12718,220052,Arterial Blood Pressure mean,ABPm,metavision,chartevents,mmHg,Numeric,
+
+Smoking,13731,225108,Tobacco use,Tobacco use,metavision,chartevents,,Checkbox,
+Smoking,15022,227687,Tobacco Use History,Tobacco Use History,metavision,chartevents,,Text,
+
+FiO2,1019,3420,FIO2,,carevue,chartevents,,Numeric,
+FiO2,3911,2981,FiO2,,carevue,chartevents,,Numeric,
+FiO2,191,190,FiO2 Set,,carevue,chartevents,,,
+FiO2,12804,223835,Inspired O2 Fraction,FiO2,metavision,chartevents,None,Numeric,
+
+SaO2,12746,220277,O2 saturation pulseoxymetry,SpO2,metavision,chartevents,%,Numeric,
+SaO2,599,646,SpO2,,carevue,chartevents,,,
+SaO2,1126,834,SaO2,,carevue,chartevents,,,
+
+PaO2,699,779,Arterial PaO2,,carevue,chartevents,,Numeric,
+PaO2,450,490,PAO2,,carevue,chartevents,,Numeric,
+PaO2,14640,226862,PA %O2 Saturation (PA Line),PA %O2 Saturation (PA Line),metavision,chartevents,%,Numeric,
+PaO2,12740,220224,Arterial O2 pressure,PO2 (Arterial),metavision,chartevents,mmHg,Numeric,
+
+PCO2,2891,3784,PCO2,,carevue,chartevents,,Numeric,
+PCO2,2922,3835,pCO2,,carevue,chartevents,,Numeric,
+PCO2,14713,227036,PCO2_ApacheIV,PCO2_ApacheIV,metavision,chartevents,None,Numeric,
+
+pH,1630,4753,pH (Art),,carevue,chartevents,,Numeric,
+pH,12802,223830,PH (Arterial),PH (Arterial),metavision,chartevents,None,Numeric,
+
+HCO3,731,812,HCO3,,carevue,chartevents,,Numeric,
+HCO3,14757,227443,HCO3 (serum),HCO3 (serum),metavision,chartevents,None,Numeric,
+
+DOB,14392,226515,Date of Birth,DOB,metavision,datetimeevents,,Date time,
+
+Date_of_admission,13662,225279,Date of Admission to Hospital,Date of Admission to Hospital,metavision,datetimeevents,,Date time,
+
+Date_of_ICU_discharge,14393,226516,Discharge Date/Time,Discharge Date/Time,metavision,datetimeevents,,Date time,
+
+Pregnant,13716,225082,Pregnant,Pregnant,metavision,chartevents,,Checkbox,
+
+Total_PEEP,636,686,Total PEEP Level,,carevue,chartevents,,,
+Total_PEEP_cmH2O,13253,224700,Total PEEP Level,Total PEEP Level,metavision,chartevents,cmH2O,Numeric,
+
+Height_inches,1153,920,Admit Ht,,carevue,chartevents,,,
+Height_inches,1402,1394,Height Inches,,carevue,chartevents,,,
+Height_inches,2218,4187,Length Calc Inches,,carevue,chartevents,,,
+Height_inches,1072,3486,Length in Inches,,carevue,chartevents,,,
+Height_inches,14492,226707,Height,Height,metavision,chartevents,Inch,Numeric,
+
+Weight_kg,687,762,Admit Wt,,carevue,chartevents,,,
+Weight_kg,14391,226512,Admission Weight (Kg),Admission Weight (Kg),metavision,chartevents,kg,Numeric,
+
+Tidal_ml,13241,224685,Tidal Volume (observed),Tidal Volume (observed),metavision,chartevents,mL,Numeric,
+
+Tidal,3534,2408,tidal vol,,carevue,chartevents,,,
+Tidal,3622,2534,tidal volume,,carevue,chartevents,,,
+Tidal,3528,2400,tidal volumes,,carevue,chartevents,,,
+
+Plateau_Pressure,500,543,Plateau Pressure,,carevue,chartevents,,,
+Plateau_Pressure,13250,224696,Plateau Pressure,Plateau Pressure,metavision,chartevents,cmH2O,Numeric,
+
+temperature_c,12758,223762,Temperature Celsius,Temperature C,metavision,chartevents,?C,Numeric,
+temperature_c,627,676,Temperature C,,carevue,chartevents,,,
+temperature_c,628,677,Temperature C (calc),,carevue,chartevents,,,
+
+CVP,12729,220074,Central Venous Pressure,CVP,metavision,chartevents,mmHg,Numeric,
+CVP, 118,113,CVP,,carevue,chartevents,,,
+
+PEEP_set,12750,220339,PEEP set,PEEP set,metavision,chartevents,cmH2O,Numeric,
+PEEP_set,466,506,PEEP Set,,carevue,chartevents,,,
+
+mean_airway_pressure,410,444,Mean Airway Pressure,,carevue,chartevents,,,
+mean_airway_pressure,13251,224697,Mean Airway Pressure,Mean Airway Pressure,metavision,chartevents,cmH2O,Numeric,
