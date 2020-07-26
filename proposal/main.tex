@@ -1,0 +1,200 @@
+% \documentclass[9pt,conference]{IEEEtran}
+% \usepackage[utf8]{inputenc}
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\setlength{\parskip}{\baselineskip}
+\setlength{\parindent}{0pt}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{floatrow}
+\usepackage{float}
+
+\title{ENGG4801 Project Proposal}
+\author{Gareth Booth 44353027}
+\date{March 2020}
+
+\begin{document}
+\maketitle
+
+\section{Topic}
+The proposed project with supervisor Sally Shrapnel involves using intensive care unit (ICU) data and various machine learning techniques to predict various patient outcomes, such as intubation, morbidity and sepsis. This project will have a special focus on ICU data from patients affected by the current COVID-19 outbreak. 
+
+The second part of the project will involve interrogating the machine learning model with explainability techniques to see what the model has learned. Various techniques will be compared, and a thorough investigation will be done into their usefulness and applicability.
+
+\section{Background}
+
+The recent COVID-19 outbreak has caused great strain on health systems around the world. Many hospitals are recording ICU data in order to get a better understanding of the disease. Using this data to predict some patient outcomes such as mortality, sepsis, or when mechanical ventilation is required (ECMO or intubation) would greatly help doctors. COVID-19 has also caused a catastrophic shortage of ICU beds in many countries. This highlights the importance of discharging patients as soon as it is safe to do so. Knowing when to extubate patients and discharge them is an important problem that can lead to more optimal bed usage.
+
+Machine learning has shown great potential in the medical space, and has outperformed doctors in some fields such as dermatology \cite{DermLevel2017}. While neural networks can achieve great performance, neural networks are often seen as `black boxes'. Although machine learning models are capable of learning very complex relationships, it is possible that a model is learning relationships that aren't desirable. If a dataset contains a bias, the model is likely to also learn this bias. Searching the dataset manually for biases is not feasible, due to the amount of data and the presence of unknown biases \cite{YoungKyle2019Dnno}. 
+
+Fortunately, there are many explainability techniques that can help interrogate a neural network to see how it's making it's predictions. Explainable models provide much needed transparency, givings users confidence when the explanations match their wisdom. They can also see if the explanation is sensible, and if it isn't they don't have to trust the model for that prediction. They can then start investigating why the model has learned an unexpected relationship. If this is from a bias, targeted data collection can now be done.
+
+Machine learning on ICU data has recently become a popular topic. One of the most widely used datasets is MIMIC-III, a dataset of deidentified ICU data from 53,423 distinct hospital admissions \cite{MIMICIIIdatabase}. Due to its size and public availability, it has been widely used for benchmarking in machine learning tasks. The data includes bio-markers, drug administrations, procedures and diagnoses (using International Classification of Diseases).
+
+One difficulty encountered while looking at MIMIC-III data is the presence of duplicate fields, for example there are two fields for white blood cell count that are exactly the same. Another difficulty in using the dataset is the use of two different medical information systems throughout the data collection, CareVue and MetaVision \cite{MIMICIIIdatabase}. 
+
+It has been shown that using models trained on ICU data from one hospital on data from another hospital will have decreased performance in \cite{ICUgeneralize}. This study also shows that a large sample size is needed from hospitals when transfer learning. Ensuring that the model will generalize is especially important in this project, as data will be gathered from ICUs around the world. However, it is worth noting that this method is using logistic regression (LR) models. 
+
+\subsection{Recurrent Neural Network}
+
+There are many ways machine learning can be useful in this space. One of the challenges that would benefit ICU doctors is, given a patients ICU data, predict whether or not the patient will require intubation tomorrow. This will allow them to ensure they have adequate resources allocated when intubation is required. This involves handling time series data.
+
+Traditional neural networks and convolutional neural networks take a fixed size input and produce a fixed size output, doing a fixed number of computations. This makes them unsuitable for unknown amounts time series data. Recurrent neural networks (RNNs) are neural networks with a feedback loop \cite{ColahLSTM}. An RNN consists of a neural network that takes and outputs some data, but also takes some state from the previous application of the neural network as input. This means that an RNN is able to make predictions based on what it's seen before, and is also able to take an arbitrary length of input sequence.
+
+One example use of an RNN is generating sequences. An RNN could take as input a character, and output what it thinks the next character will be. If the output is used as the next input, the network can generate large sequences of output. This RNN could be trained on paragraphs of English text, and will be able to create series of paragraphs \cite{RNNEffectiveness}.
+
+Long short-term memory (LSTM) is an RNN architecture that achieves greater performance than a traditional RNN. It allows models to learn long-term dependencies, i.e. information from many inputs ago \cite{ColahLSTM}. LSTMs take two inputs from the previous application, one is called the ``cell state'' and the other is the data output. This extra cell state is updated each application by removing unimportant data and adding new relevant data. 
+
+However, simple LSTM architectures have a drawback of not being able to use context from the entire input sequence, and can only make predictions from the internal state and inputs up to that point. For problems like machine translation, this is not desirable \cite{weng2018attention}. Instead, another commonly used architecture is the seq2seq architecture, which uses an encoder and a decoder network \cite{seq2seq}. The encoder is an LSTM network that summarizes the entire input sequence into a single internal state, which is a fixed length vector. It passes on this internal state to a decoder network. The decoder network generates a new sequence by feeding back the output of each LSTM application into the input of the next one. In order to not output an infinite sequence, a special ``start'' input token is used as input to the decoder, and an ``end'' token is output from the decoder. 
+
+While the encoder-decoder network performs well on small sequences, the summary produced by the encoder network is a bottleneck for longer input sequences \cite{weng2018attention}. The attention method was created to resolve this problem. Instead of using only the summary of the entire input sequence, attention uses the internal state of the encoder LSTM after every input. The encoder in the original attention paper is a bidirectional RNN, which allows each internal state to have information from the preceding and following input \cite{AttentionPaper}.
+
+A neural network is used at each application of the decoder to decide, based on the current decoder internal state, which of the internal states from the encoder will be useful for this output. A `context vector' is then created, which weights the useful internal data. This context data is added as input into the decoder \cite{weng2018attention}. In the example of machine translation, in the sentence ``I am writing a long report,'' the words `writing' and `report' are expected to attend strongly, whereas `writing' and `long' aren't.
+
+Besides removing the information bottleneck, another advantage of using attention over seq2seq is that they can be explainable. The simplest method of making attention models explainable is, for each output, getting how important each feature is from the context vector and making a heatmap (attention map) from all of the outputs. This is a local method, meaning that it provides explanations about a single input.
+
+As an example of how LSTMs can be applied to ICU data is as follows. Each input to an LSTM will be the patients data for the whole day, e.g. all chart readings, drug administrations etc. The output is the predicted values of their ICU data for the next day. A vanilla neural network can be used to make a prediction as to what the target class will be based on this output data. Alternatively, the output from the model could be a probability that some event occurs tomorrow. While attention was initially developed for machine translation \cite{AttentionPaper}, it is also useful in this context. An attention layer can simply be added before the LSTM in the above example. All of the components required to run this example are implemented in the machine learning framework Keras \cite{keras}.
+
+Some relevant machine learning papers using ICU data and LSTMs are investigated.
+
+In \cite{KajiLSTM}, an LSTM with attention is used to predict daily sepsis, myocardial infarction (MI), and vancomycin antibiotic administration with data from MIMIC-III. This model was able to predict next-day vancomycin with a sensitivity of  0.71, and sepsis with a sensitivity of 0.73. However, next-day MI prediction had a poor sensitivity of 0.56, likely due to the lack of strong predictors present in the database. This paper used attention maps to highlight which features were most important for predictions. It finds that the model exploited features that reflect clinician decision-making, which highlights the importance of feature level explainability and that care is required to ensure the model can learn features that are clinically useful. Furthermore, all code is publicly available.
+
+\cite{ICUFancyLSTM} uses data from four ICUs to predict 90-day mortality. It is worth noting that the data has a temporal resolution of 1 hour, which is far higher than most ICU datasets. They use a vanilla LSTM with hyperparameter training. The code for creating and training the model is available. On admission, the model has an AUROC of 0.73, 0.82 after 24 hours, and 0.88 at the time of discharge. The paper is able to produce hourly explanations while data is still being collected. The authors use SHAP to do this. 
+
+SHAP is a model agnostic, local interpretability method. It is a unification of six existing methods, and outputs the importance value for each feature based on the contribution that feature makes to the prediction \cite{SHAP}. It is based on Shapley values from co-operative game theory, and has a strong theoretical justification \cite{YoungKyle2019Dnno}. The SHAP value for a feature is it's compound effect when interacting with all other features \cite{ICUFancyLSTM}. These local explanations can be combined to make global explanations \cite{TreeExplainer}. 
+
+In the above paper, SHAP is used to tell if a given feature increases or decreases the probability of mortality. It is used to show that, for example, the presence of a small age in a patient greatly decreases risk, while a higher age increases it \cite{ICUFancyLSTM}. It also shows that the presence of comorbidities greatly increases risk. 
+
+The challenging nature of ICU data has also led to the creation of new machine learning techniques. In \cite{GRUODE}, a new method is proposed to handle data that is irregular in sampling times and features, such as the MIMIC-III dataset. They use Gated Recurrent Unit (GRU) RNNs, which are similar to LSTMs but only pass forward one internal state vector instead of two. Within these GRU RNNs, they use neural ordinary differential equations instead of a neural network, and a Bayesian update network to process the observations. Neural ODEs are used due to their continuous nature, which is well suited for time series data. This means that they don't have to group observations into a single day, which involves downsampling some features and upsampling others. They achieve state-of-the-art results on MIMIC-III. However, the paper does not incorporate explainability. Code is available.
+
+\subsection{Random Forests}
+
+Another challenge involves predicting an event based on a fixed amount of data. For example, predicting when a patient will require intubation given only hospital admission data. This is a significantly harder challenge, as \cite{KajiLSTM,ICUFancyLSTM} find that models benefit from access to longer time series data. However, knowing if a patient will require intubation many days in advance would be extremely valuable. 
+
+There are many ways to handle a fixed amount of input data. As already shown in \cite{ICUFancyLSTM}, LSTMs are able to do this. Another popular method is using random forests. Random forests (RF) and gradient boosted trees achieve state of the art performance in many domains, particularly when features are individually meaningful and in tabular form \cite{TreeExplainer}. Random Forests involve ensembling many decision trees and getting a single aggregated result. Gradient boosting methods are slightly different in the way they're constructed.
+
+There are many global explanation methods for tree based methods. The simplest method is to report the decision path. However, this does not scale for models with multiple trees \cite{TreeExplainer}. Many perturbation based methods exist, where the values of one or more features are perturbed and a change in the final prediction is measured \cite{TreePerturb}. These have the drawback of being non-deterministic, often providing different outputs for the same input \cite{TreeExplainer}.
+
+From the creators of SHAP (and others), TreeExplainer is a local explainability method based on SHAP values \cite{TreeExplainer}. As with SHAP, TreeExplainer has many desirable features, including stability, speed, and fairness regardless of tree depth. A software package is available.
+
+Random forests have been a popular method when using ICU data.
+
+\cite{MIMIC_BMJ_RF} focuses on predicting if patients are ready to be discharged from ICU or not. The authors use data from MIMIC-III and data from another hospital, which allowed them to test generalizability. They use both random forests and logistic classifiers. They used a permutation based method to calculate the relative importance of each feature. This involves permuting the values of the input features and seeing how this change affects the AUROC. Each features importance is slightly different across each dataset, however the top 2 are the same (minimum GCS and airway). The data they use from MIMIC-III is restricted to the MetaVision database, which contains less data than CareVue. In order to address class imbalance (insufficient negative outcomes from discharge), extra data is generated. Data resolution is 4 hours if available, otherwise 36 hours. Missing data is filled in using k-nearest-neighbours.
+
+Mortality is predicted in patients with unplanned extubation in \cite{CompareFourML}. The paper compares the performance of four different machine learning architectures, including neural networks, logistic regression models and random forests. The study concluded that random forests were the most suitable for this task, having the highest AUROC, precision and recall. However, the dataset only contains data from 341 patients in this study.
+
+\cite{ARDSML} uses random forests and gradient boosting to recognize patients at high risk of acute respiratory distress syndrome (ARDS). They use the MIMIC-III database. The paper also uses latent class analysis. This is used to find groups (sub-phenotypes) in their data, which allow them to create 3 separate models, one for each group. This study is relevant due to the fact that COVID-19 can rapidly cause the onset of ARDS \cite{CoronaARDS}, and so the list of vitals and measurements from this paper should be used. 
+
+% Interesting - looks like TCAV can work on sequential models...
+
+% - https://github.com/tensorflow/tcav/issues/50
+
+% RCAV? 
+
+% - https://imimic.bitbucket.io/docs/papers/graziani.pdf
+
+\section{Aims}
+This project will feature ICU data from coronavirus patients. Data will be entered by ICU workers in hospitals around the world into UQ's REDCap database (\url{https://redcap.health.uq.edu.au/}). However, due to time constraints and stretched resources inside ICUs around the world, it is likely that there will be insufficient data for training any machine learning models for some time. Because of this, the MIMIC-III database will also be used.
+
+Given some ICU data, we aim to use various machine learning techniques to predict patient outcomes. These patient outcomes include mortality, sepsis, discharge and ECMO. Another goal will be to see the effectiveness of some treatment methods, such as administration of antiviral medications. 
+
+One of the primary goals of this project is to incorporate explainability. This will include an investigation into many existing techniques and an attempt to improve or combine them.
+
+A secondary goal is to create a complete software package combining predictions and explainability that would hypothetically be deployable to doctors.
+
+To promote research in the area and advance the global communities understanding of the virus, it is a goal of this project to make it all open source. The availability of open datasets like MIMIC-III has created much interest in ICU data, and the unique nature of the coronavirus ICU dataset we have access to will provide an interesting challenge for researchers, and will help prepare for outbreaks in the future.  
+
+\section{Required Resources }
+
+Data is a crucial part of this project. Access to the publicly available MIMIC-III dataset involves completing a training course and requesting access \cite{MIMICIIIdatabase}. Access to the REDCap dataset will require appropriate ethics approval. 
+
+The Python programming language will be used, and a variety of open source machine learning and data visualization packages will be used throughout this project such as Keras \cite{keras}.
+
+Another key resource is computing power. The MIMIC-III dataset contains 50GB of data. Also, machine learning requires a powerful GPU to accelerate training. Therefore access to a compute cluster will be required throughout the duration of the project. The Wiener cluster (\url{https://rcc.uq.edu.au/wiener}) has ample high speed memory (384 GB per node) and very powerful GPUs, and will be used for this project. As a backup, access to another cluster, getafix, has been obtained (\url{http://research.smp.uq.edu.au/computing/getafix.html}). 
+
+\section{Milestones}
+
+\subsection{MIMIC-III Data Processing (March)}
+
+Creating a dataset from the MIMIC-III database is expected to take some time. This will involve taking all the tables in the MIMIC-III database, extracting relevant data and eventually merging them into one CSV file. The data must be organized into a time series (daily), which makes it easy to get admission only and time series data. As previously noted, the dataset contains many duplicate fields that will have to be found and handled.
+
+This task includes choosing some relevant features for predictions and searching for all of these in the database. Also, the target features must be found e.g. calculating the days to intubation by finding when intubation was applied, or finding the disease code for sepsis and finding when that event occurred. This task is expected to take only a week because there are some papers that have already done this task and have released code, e.g. \cite{KajiLSTM}. 
+
+\subsection{REDCap data processing (March) }
+
+As the schema for the REDCap database is currently known, fields in the dataset can be matched with those in MIMIC-III. Emphasis for this task is placed on ensuring that the format is similar to the processed MIMIC-III data, a time series CSV file with similar features. This will allow both datasets to be used in training interchangeably, which is important as we aren't expecting to have enough REDCap data to do machine learning for a while. As the schema is known already and is quite similar to the expected output from the MIMIC-III data processing step, processing the REDCap data is expected to take a few days. 
+
+\subsection{Data Investigation (April)}
+General investigation into the dataset is an important first step. Knowing what data is missing, what units are used etc. is all helpful information. This step can be done with the final dataset and the data dictionary. It may involve creating visualizations for each feature such as bar plots and violin plots. 
+
+\subsection{Random Forests Investigation (April)}
+
+Various random forest methods will be investigated.
+This will involve random forests and gradient boosted methods. Scikit learn's random forest implementation will be used initially. Gradient boosting methods such as XGBoost will be used, among others.
+
+The models should be created so that it is possible to easily change the quantity of data that is passed in, for example 1 week of ICU data instead of 1 day. This should be possible by making the input from concatenating the data for each day. 
+
+A standard 20\% test set and 10\% validation set will use used. Hyperparameters for random forests include number of trees, learning rate and interaction depth. 
+
+\subsection{Random Forests Explainability Investigation (April - May)}
+
+Perturbation methods and TreeExplainer will be investigated. Other relevant explainability techniques that are promising will be investigated for this section. 
+
+Some sanity checks on the explainability methods will be done. This will include testing their reliability, robustness and model dependence.
+
+\subsection{LSTM Investigation (June)}
+
+After the data is obtained, an LSTM based network can be trained on either dataset.
+
+Initially, a vanilla LSTM will be trained to predict some of the patient outcomes. Predicting next-day mortality and discharge first will be beneficial as these outcomes are well defined in the database. Training will involve separating the dataset from the feature labels. Feature labels will be shifted to the previous day so that the model will learn to predict next day events.
+
+If time permits, hyperparamter optimization will be done over chosen optimizer and optimizer parameters such as learning rate, neural network depth, batch size, and regularization techniques. 
+
+After results are obtained on these two outcomes, more predictions will be implemented, including sepsis, intubation and ECMO.
+
+After this, attention can be added to the model to see what difference it makes (in accuracy and training time). There are also different variations of attention that can be used. 
+
+Training the model to predict multiple days in advance will also be attempted. This can be done by shifting the feature labels by more than one day. 
+
+Keras will be used to implement the predictive model, as it is easy to use and runs on the compute clusters.
+
+\subsection{LSTM Explainability Investigation  (June - August)}
+
+Two techniques of interest are SHAP and attention maps. Implementing an attention map technique isn't expected to take long, as Keras has some functionality to get extract data from the attention model. Code is also available for SHAP. Some time will be spent visualizing the explanations using plotting packages.
+
+As with random forests, some sanity checks on these techniques will also be done. 
+
+At this stage, the explainability techniques may reveal flaws in the dataset or model. We should then attempt to fix these problems.
+
+At this point, we can see if the LSTM model has learned anything different from the random forests model. We can also compare the LSTM explainability methods, testing if they give similar explanations.
+
+\subsection{Open Sourcing}
+It is difficult to estimate the time required or even determine the feasibility of creating an open database from REDCap. Creating an open ICU dataset has been done in the past, however due to the number of parties involved in creating and managing the data, it might be that it takes months to come to a data sharing agreement. However, open sourcing the project itself is  expected to be straightforward, as it involves choosing a licence and ensuring adequate code quality.
+
+\subsection{Write Up (September - November)}
+
+The final demonstration is due late October, and the final report is due early November.  As this report took approximately a week of full time equivalent work, it is expected that the final report (which is typically 60 pages) will take 5 to 6 weeks.
+
+\section{Risk Assessment}
+There are no health and safety risks associated with this project.
+
+There are, however, some significant risks to the project itself. One risk is a data breach. Because the data from the REDCap database, while de-identified, is initially confidential, it is important that the only people who have access to it are the members of the research group. This is a risk because a breach may cause our access to the data to be revoked, and so has a very high severity. However, this risk can be mitigated by using best practices when handling data. One such option is to use UQ's Research Data Manager (RDM) for all identifiable data (\url{https://research.uq.edu.au/rmbt/uqrdm}). Using RDM will ensure the security of the data. Furthermore, any computers that have access to the data will be password protected and locked when not in use. Some residual risk is left over, as it is still possible that misconfiguration can cause malicious actors to be able to access the data. However, the likelihood of this is low. 
+
+Another risk is insufficient data. In general, machine learning algorithms require at least 5000 data points before achieving acceptable accuracy \cite{5000Points}. It is possible that this amount of data won't be obtained for many months. Fortunately, this is not a severe risk to the project as we can use the MIMIC-III database as a backup. 
+
+Another risk to this project is coronavirus itself. Fortunately, as the entire project consists of online work, every aspect of the course can be done online. This greatly reduces the risk of being directly affected by the virus. However, coronavirus could cause long delays in the project due to causing the shutdown of many services. Some services that are critical to the project include access to the internet to collaborate with teammates, and access to UQ servers. Unfortunately, this risk cannot be fully mitigated, as online resources are critical. However, it can be partially mitigated by downloading all required resources
+
+\cite{APACHE}
+\cite{APACHE2}
+\cite{IsAttentionInterpretable}
+
+\bibliographystyle{IEEEtran} % We choose the "plain" reference style
+\bibliography{refs} % Entries are in the "refs.bib" file
+
+\end{document}
+
+notes
+https://www.who.int/docs/default-source/coronaviruse/who-china-joint-mission-on-covid-19-final-report.pdf
