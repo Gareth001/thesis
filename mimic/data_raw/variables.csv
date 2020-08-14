@@ -4,7 +4,6 @@ CRP,14758,227444,C Reactive Protein (CRP),C Reactive Protein (CRP),metavision,ch
 Haemoglobin,12742,220228,Hemoglobin,Hemoglobin,metavision,chartevents,g/dl,Numeric,
 Lymphocyte_count,12298,70052,PERIPHERAL BLOOD LYMPHOCYTES,,hospital,microbiologyevents,,,
 AST,2902,3801,SGOT,,carevue,chartevents,,Numeric,
-Systolic_BP,12716,220050,Arterial Blood Pressure systolic,ABPs,metavision,chartevents,mmHg,Numeric,
 Diabetes,14684,227007,Diabetes,Diabetes,metavision,chartevents,,Checkbox,
 PaCO2,12743,220235,Arterial CO2 Pressure,PCO2 (Arterial),metavision,chartevents,mmHg,Numeric,
 apache2,14504,226743,APACHE II,APACHE II,metavision,chartevents,None,Numeric,
@@ -33,6 +32,7 @@ HR,212,211,Heart Rate,,carevue,chartevents,,Numeric,
 
 RR,12738,220210,Respiratory Rate,RR,metavision,chartevents,insp/min,Numeric,
 RR,575,618,Respiratory Rate,,carevue,chartevents,,Numeric,
+RR,2780,3603,Resp Rate,,carevue,chartevents,,,
 
 Diastolic_BP,13688,225310,ART BP Diastolic,ART BP Diastolic,metavision,chartevents,mmHg,Numeric,
 Diastolic_BP,12717,220051,Arterial Blood Pressure diastolic,ABPd,metavision,chartevents,mmHg,Numeric,
@@ -86,6 +86,7 @@ Height_inches,14492,226707,Height,Height,metavision,chartevents,Inch,Numeric,
 
 Weight_kg,687,762,Admit Wt,,carevue,chartevents,,,
 Weight_kg,14391,226512,Admission Weight (Kg),Admission Weight (Kg),metavision,chartevents,kg,Numeric,
+Weight_kg,2765,3580,Present Weight  (kg),,carevue,chartevents,,,
 
 Tidal_ml,13241,224685,Tidal Volume (observed),Tidal Volume (observed),metavision,chartevents,mL,Numeric,
 
@@ -101,10 +102,18 @@ temperature_c,627,676,Temperature C,,carevue,chartevents,,,
 temperature_c,628,677,Temperature C (calc),,carevue,chartevents,,,
 
 CVP,12729,220074,Central Venous Pressure,CVP,metavision,chartevents,mmHg,Numeric,
-CVP, 118,113,CVP,,carevue,chartevents,,,
+CVP,118,113,CVP,,carevue,chartevents,,,
 
 PEEP_set,12750,220339,PEEP set,PEEP set,metavision,chartevents,cmH2O,Numeric,
 PEEP_set,466,506,PEEP Set,,carevue,chartevents,,,
 
 mean_airway_pressure,410,444,Mean Airway Pressure,,carevue,chartevents,,,
 mean_airway_pressure,13251,224697,Mean Airway Pressure,Mean Airway Pressure,metavision,chartevents,cmH2O,Numeric,
+
+arterial_bp_systolic,57,51,Arterial BP [Systolic],,carevue,chartevents,,,
+arterial_bp_systolic,12716,220050,Arterial Blood Pressure systolic,ABPs,metavision,chartevents,mmHg,Numeric,
+arterial_bp_systolic,12734,220179,Non Invasive Blood Pressure systolic,NBPs,metavision,chartevents,mmHg,Numeric,
+
+arterial_bp_diastolic,4831,8368,Arterial BP [Diastolic],,carevue,chartevents,,,
+arterial_bp_diastolic,12717,220051,Arterial Blood Pressure diastolic,ABPd,metavision,chartevents,mmHg,Numeric,
+arterial_bp_diastolic,12735,220180,Non Invasive Blood Pressure diastolic,NBPd,metavision,chartevents,mmHg,Numeric,
