@@ -112,10 +112,10 @@ mean_airway_pressure,13251,224697,Mean Airway Pressure,Mean Airway Pressure,meta
 
 arterial_bp_systolic,57,51,Arterial BP [Systolic],,carevue,chartevents,,,
 arterial_bp_systolic,12716,220050,Arterial Blood Pressure systolic,ABPs,metavision,chartevents,mmHg,Numeric,
-arterial_bp_systolic,12734,220179,Non Invasive Blood Pressure systolic,NBPs,metavision,chartevents,mmHg,Numeric,
-arterial_bp_systolic,419,455,NBP [Systolic],,carevue,chartevents,,,
+bp_systolic,12734,220179,Non Invasive Blood Pressure systolic,NBPs,metavision,chartevents,mmHg,Numeric,
+bp_systolic,419,455,NBP [Systolic],,carevue,chartevents,,,
 
 arterial_bp_diastolic,4831,8368,Arterial BP [Diastolic],,carevue,chartevents,,,
 arterial_bp_diastolic,12717,220051,Arterial Blood Pressure diastolic,ABPd,metavision,chartevents,mmHg,Numeric,
-arterial_bp_diastolic,12735,220180,Non Invasive Blood Pressure diastolic,NBPd,metavision,chartevents,mmHg,Numeric,
-arterial_bp_diastolic,4904,8441,NBP [Diastolic],,carevue,chartevents,,,
+bp_diastolic,12735,220180,Non Invasive Blood Pressure diastolic,NBPd,metavision,chartevents,mmHg,Numeric,
+bp_diastolic,4904,8441,NBP [Diastolic],,carevue,chartevents,,,
