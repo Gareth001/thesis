@@ -16,8 +16,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{titlepic}
-\setlength{\cftbeforesecskip}{3pt} % for table of contents
-\usepackage[a4paper,left=30mm,right=30mm]{geometry}
+% \setlength{\cftbeforesecskip}{7pt} % for table of contents
+\usepackage[a4paper,left=30mm,right=30mm,bottom=40mm]{geometry}
 
 \title{\parbox{\linewidth}{\vspace{-7ex}\centering%
   \includegraphics{PNGLogo.png}\vspace{5ex}\endgraf\bigskip\bigskip
@@ -84,23 +84,24 @@ I would like to acknowledge Sally Shrapnel for the time she spent advising my th
 \newpage
 \section*{Abstract}
 
-Health emergencies such as the current COVID-19 pandemic put great strain on ICU clinicians. Using machine learning to predict patient outcomes using time series ICU data seems to be a promising way to reduce information overload and help doctors better manage their patients. Using the MIMIC-III database, we create an ICU dataset of 2870 patients and evaluate it on an LSTM model to predict patient mortality, achieving an 87\% accuracy. We show that SHAP, a popular interpretability method, is able to create rich global explanations of this model, however is inadequate for local explanations over full time series. Modifications to the SHAP library are proposed to better handle local explanations, and these modifications are evaluated. This new SHAP is shown to provide local accuracy, but is unsuitable for global explanations. For validation, the accuracy and explanations from the LSTM are compared with those of random forests trained on fixed amounts of admission and final day data.
+Health emergencies such as the current COVID-19 pandemic put great strain on ICU clinicians. Using machine learning to predict patient outcomes using time series ICU data seems to be a promising way to reduce information overload and help doctors better manage their patients. Using the MIMIC-III database, we create an ICU dataset of 2870 patients and evaluate it on an LSTM model to predict patient mortality, achieving an 87\% accuracy. We show that SHAP, a popular interpretability method, is able to create rich global explanations of this model. However, it is shown to be inadequate for local explanations over full time series. Modifications to the SHAP library are proposed to better handle local explanations, and these modifications are evaluated. This new SHAP is shown to provide local accuracy, but is unsuitable for global explanations. For validation, the accuracy and explanations from the LSTM are compared with those of random forests trained on fixed amounts of admission and final day data.
 
 \newpage
 \tableofcontents
 \newpage
 \section{Introduction}
-Health emergencies such as pandemics cause great strain to the healthcare system and create a shortage of intensive care unit (ICU) beds. During these emergencies, many hospitals gather data from their patients in ICU including vital signs, procedures and diagnoses. This data could be used to inform doctors about effective treatments or provide early warnings. However, there is often an information overload for ICU specialists, considering the number of patients, the time each patient spends in ICU and the number of measurements taken \cite{KajiLSTM}.
+Health emergencies such as pandemics cause great strain to the healthcare system and create a shortage of intensive care unit (ICU) beds. During these emergencies, many hospitals gather data from their patients in ICU including vital signs, procedures and diagnoses. This data could be used to inform doctors about effective treatments or provide early warnings. However, there is often an information overload for ICU specialists, considering the number of patients, the time each patient spends in ICU and the number of measurements taken \cite{AIICU}.
 
-As machine learning requires a large amount of data, it has great potential in this field. Recently, there have been a large number of studies released in this area. Some of the problems that these studies focus on include predicting clinical events such as death, myocardial infarction or discharge \cite{KajiLSTM}. 
+Recently, there have been a large number of studies released using machine learning on ICU data \cite{MLICUSystematicReview}. Some of the problems that these studies focus on include predicting clinical events such as death, myocardial infarction, discharge or complications \cite{KajiLSTM, MLICUTechniques}. 
 
-There are a few factors that make this a challenging domain. While there is a relatively large amount of open access data available compared to other fields, it can be challenging to process. Also, the time series nature of ICU data limits the choice of machine learning models substantially. 
+There are a few factors that make this a challenging domain. While there is a relatively large amount of open access data available compared to other fields, it can be challenging to process. Also, the time series nature of ICU data limits the choice of machine learning models substantially.
 
-Few studies incorporate explainability techniques. Machine learning models normally give a single output, which is a prediction for the given data. This does not given any explanation as to why that prediction might be true. Explainability (or interpretability) techniques allow seeing which features are important for a prediction, and can help give users of the model confidence \cite{YoungKyle2019Dnno}.
+Few studies incorporate explainability techniques, and \cite{XAIICUReview} finds that 
+explainable AI in medicine has not been adequately and formally practiced. There is normally no information available that illuminates the decision process for any given output from a machine learning model. Explainability (or interpretability) techniques allow seeing which features  in a model are important for a prediction, and can help give users confidence in the model \cite{YoungKyle2019Dnno}.
 
-One use of explainability is to recognize biases. Machine learning models are capable of learning very complex relationships, and if a dataset contains a bias, the model is likely to also learn this bias. Searching the dataset manually for biases is not feasible, due to the amount of data and the presence of unknown biases \cite{YoungKyle2019Dnno}. Explainability techniques can reveal these biases by highlighting spurious relationships, which domain experts can identify.
+One use of explainability is to recognize biases. Machine learning models are capable of learning very complex relationships, and if a dataset contains a bias, the model is likely to also learn this bias. Searching the dataset manually for biases is not feasible, due to the amount of data and the presence of unknown biases \cite{YoungKyle2019Dnno}. Explainability techniques can reveal these biases by highlighting spurious relationships, which domain experts can identify. Another motivation for explainability is to meet regulations such as Europe's General Data Protection Regulation \cite{XAIICUReview}.
 
-The importance of ICU data has been highlighted in the ongoing COVID-19 pandemic. One possible application of this work is to perform transfer learning to a new dataset with  data from COVID-19 patients. Interpretability techniques can highlight relationships between features, which could potentially reveal novel insights which could be used by doctors. Another possible application of robust explainability techniques for time series data is to sanity check existing models. This can be possible for some model agnostic techniques.
+The importance of using ICU data has been highlighted in the ongoing COVID-19 pandemic, where initially recommendations were based on existing evidence from other viral respiratory infections \cite{COVID19}. One possible application of this work is to perform transfer learning to a new dataset with  data from COVID-19 patients. Interpretability techniques can highlight relationships between features, which could potentially reveal novel insights which could be used by doctors. Another possible application of robust explainability techniques for time series data is to sanity check existing models. This can be possible for model agnostic techniques.
 
 The key question of this thesis is if it's possible to predict death using time series ICU data in an interpretable way.
 
@@ -109,17 +110,18 @@ The key question of this thesis is if it's possible to predict death using time 
 
 \subsection{Machine Learning on ICU Data}
 \label{Machine Learning on ICU Data}
-The first difficulty arising from using ICU data is the nature of the time series data. Time series data is 3 dimensional. Specifically, an ICU dataset will have many patients, each with many features (e.g. vital signs) over many different points in time (e.g. every hour). Time series machine learning models should be able to handle any length of time series. This means the model should take inputs of the shape $(x,y,z)$ where $x$ and $y$ are any length, and $z$ is the number of features which is fixed. The model will output a list of predictions, one predictions for each $x$.
+The first difficulty arising from using ICU data is the nature of the time series data. Time series data is 3 dimensional. Specifically, an ICU dataset will have many patients, each with many features (e.g. vital signs) over many different points in time (e.g. every hour). Time series machine learning models should be able to handle any length of time series. This means the model should take inputs of the shape $(x,y,z)$ where $x$ and $y$ are any length, and $z$ is the number of features which is fixed. The model will output a list of predictions, one prediction for each $x$.
 
-One of the problems that we can ask using this time series data is given a patients data, predict if this patient was discharged or died, where discharged means discharged from ICU alive. However, this problem means that the machine learning model could be looking at the final point of data to make a prediction, i.e. the data just before the patient died. Care needs to be taken to ensure that the model is not only using this data. Another related problem is of predicting 90-day mortality, which is an easier problem \cite{ICUFancyLSTM}.
+One of the problems that we can ask using this time series data is given a patient's data, predict if this patient was discharged or died, where discharged means discharged from ICU alive. However, this problem means that the machine learning model could be looking at the final point of data to make a prediction, i.e. the data just before the patient died. Care needs to be taken to ensure that the model is not only using this data. Another related problem is of predicting 90-day mortality, which is an easier problem \cite{ICUFancyLSTM}.
 
 A machine learning model to predict ICU death could be useful in practice to find out if a patient is going to die soon. If the model predicts that the patient will die given the current data, then extra care can be given to them. If the model predicts that the patient will be discharged soon, then other patients can be prioritized.
 
-Another way of using ICU data is to make predictions using a fixed amount of data, e.g. only admission data. Data from the first $n$ days can be used, but $n$ must be known before the model has been created. This problem is suitable for traditional machine learning models. These models can handle 2 dimensional data, i.e. many data points with many features. These models will output 1 prediction for each data point (where a data point is a single set of features). Similarly, data from the last $n$ days of a patients ICU stay can be used instead. However, due to these models using less data to make predictions, it is reasonable to expect these models do not have as much predictive power as a time series model. \cite{KajiLSTM,ICUFancyLSTM} find that models benefit from access to longer time series data.
+Another way of using ICU data is to make predictions using a fixed amount of data, e.g. only admission data. Data from the first $n$ days can be used, but $n$ must be known before the model has been created. This problem is suitable for traditional machine learning models. These models can handle 2 dimensional data, i.e. many data points with many features. These models will output 1 prediction for each data point (where a data point is a single set of features). Similarly, data from the last $n$ days of a patient's ICU stay can be used instead. However, due to these models using less data to make predictions, it is reasonable to expect these models do not have as much predictive power as a time series model. \cite{KajiLSTM,ICUFancyLSTM} find that models benefit from access to longer time series data.
 
-One of the most widely used ICU datasets is MIMIC-III, a dataset of deidentified data from 53,423 distinct hospital admissions \cite{MIMICIIIdatabase}. Due to its size and public availability, it has been widely used for benchmarking machine learning tasks. The data includes bio-markers, drug administrations, procedures and diagnoses (using International Classification of Diseases).
+One of the most widely used ICU datasets is MIMIC-III, a dataset of deidentified data from 53,423 distinct hospital admissions \cite{MIMICIIIdatabase}. Due to its size and public availability, it has been widely used for benchmarking machine learning tasks \cite{XGBoostICU}. The data includes bio-markers, drug administrations, procedures and diagnoses (using International Classification of Diseases).
 
-Most studies using time series data use a fixed temporal resolution, for example 1 day in \cite{KajiLSTM} and 1 hour in \cite{ICUFancyLSTM}. However, some techniques exist to handle continuous data \cite{GRUODE}.
+Most studies using time series data use a fixed temporal resolution, for example 1 day in \cite{KajiLSTM,eLSTM} and 1 hour in \cite{ICUFancyLSTM,ICUBidirectionalLSTM}. However, some techniques exist to handle continuous data \cite{GRUODE}. \cite{eLSTM} uses a fixed amount of time series data (10 days).
+
 
 \subsection{LSTMs}
 Recurrent neural networks (RNNs) are neural networks with a feedback loop \cite{ColahLSTM}. An RNN consists of a neural network that takes and outputs some data, but also takes some state from the previous application of the neural network as input. This means that an RNN is able to make predictions based on what it's seen before, and is also able to handle an arbitrary length of input sequence.
@@ -138,13 +140,13 @@ An example of an LSTM used with ICU data to predict mortality is in \cite{ICUFan
 
 \subsection{Random Forests}
 There are many machine learning models that handle a fixed amount of input data. LSTMs can be made to handle fixed amounts of data by limiting the length of input sequences when defining the model. 
-Random forests are a popular type of model. Random forests (RF) and gradient boosted trees achieve state of the art performance in many domains, particularly when features are individually meaningful and in tabular form \cite{TreeExplainer}. Random Forests involve ensembling many decision trees and getting a single aggregated result. Gradient boosting methods are slightly different in the way they're constructed.
+Random forests are an alternative architecture. Random forests (RF) and gradient boosted trees achieve state of the art performance in many domains, particularly when features are individually meaningful and in tabular form \cite{TreeExplainer}. Random Forests involve ensembling many decision trees and getting a single aggregated result. Gradient boosting methods involve ensembling decision trees by greedily choosing individual decision trees that improve the model the most \cite{XGBoost}.
 
 Mortality is predicted in patients with unplanned extubation in \cite{CompareFourML}. The paper compares the performance of four different machine learning architectures, including neural networks, logistic regression models and random forests. The study concluded that random forests were the most suitable for this task, having the highest AUROC, precision and recall. However, the dataset only contains data from 341 patients in this study, and cannot be used as a benchmark as it does not use the MIMIC-III database. 
 
 \subsection{SHAP}
 \label{SHAP Intro}
-SHAP is a model agnostic, local interpretability method \cite{SHAP}. It is a unification of six existing methods, and outputs the importance value for each feature based on the contribution that feature makes to the prediction. It is based on Shapley values from co-operative game theory, and has a strong theoretical justification \cite{YoungKyle2019Dnno,ICUFancyLSTM}. The SHAP value for a feature is it's compound effect when interacting with all other features. A positive value means the feature moves the prediction in the positive direction. For example, if the model outputs 1 for death, then a positive value represents an increased risk of death \cite{SHAPInteraction}.
+SHAP is a model agnostic, local interpretability method \cite{SHAP}. It is a unification of six existing methods, and outputs the importance value for each feature based on the contribution that feature makes to the prediction. It is based on Shapley values from co-operative game theory, and has a strong theoretical justification \cite{YoungKyle2019Dnno,ICUFancyLSTM}. The SHAP value for a feature is it's compound effect when interacting with all other features. A positive value means the feature moves the prediction in the positive direction. For example, if the model outputs 1 for death, then a positive value represents an increased risk of death \cite{SHAPInteraction}. The sum of all SHAP values for a point equals the models actual prediction for that point.
 
 SHAP is used in \cite{ICUFancyLSTM} to tell if a given feature increases or decreases the probability of mortality. It is used to show that, for example, the presence of a small age in a patient greatly decreases risk, while a higher age increases it. 
 
@@ -152,9 +154,11 @@ As an example application of SHAP, consider a model predicting mortality trained
 
 \begin{figure}[H]
 \centering\caption{Example SHAP application from \cite{SHAPInteraction}}
-\includegraphics[scale=0.7]{SHAP example.png}
+\includegraphics[scale=0.74]{SHAP example.png}
 \label{SHAP Example Systolic BP}
 \end{figure}
+The range of possible SHAP values depends on the model's output. In the above example, the model predicts a value between 0 and 1 for mortality. Therefore, all SHAP values within an individual local explanation must sum to a value between 0 and 1. This could mean there is a feature with a SHAP value of -2, another with a value of 1 and another with a value of 0.01. From this, we can see that the first feature is twice as impactful to the models prediction as the second feature, and the third feature is insignificant to the prediction relative to the other features.
+
 The local explanations from SHAP can be combined to make global explanations \cite{TreeExplainer}, as the above figure shows from plotting all local explanations. Further global explanations can be found by taking the mean absolute SHAP value of all features, which allows the comparison of model sensitivity between all features \cite{molnar2019}.
 
 An enhanced version of SHAP for random forests is introduced in \cite{TreeExplainer} and \cite{SHAPInteraction}. This includes the ability to calculate interaction values between features. This can allow quantifying which features interact the most. As an example, the above figure shows that age and systolic blood pressure interact strongly.
@@ -181,7 +185,7 @@ The Python programming language was chosen due to it being the de facto standard
 
 \subsection{MIMIC-III}
 
-MIMIC-III consists of data from two different ICU database systems, CareVue and Metavision. There are 57,272 unique hospital admissions. The raw data is a series of csv files of database tables, as is documented in \cite{MIMICIIIdatabase}. The tables of interest for this study include CHARTEVENTS and D\_ITEMS.
+MIMIC-III consists of data from two different ICU database systems, CareVue and Metavision. There are 57,272 unique hospital admissions. The raw data is a series of csv files of database tables, as is documented in \cite{MIMICIIIdatabase}. The tables of interest for this study include CHARTEVENTS and D\_ITEMS. 
 
 CHARTEVENTS contains a list of events, also called charted data or measurements. In this table, the key columns are HADM\_ID, which is a unique ID given to hospital patients for a single admission. CHARTTIME gives the time of the event, ITEMID gives the ID of the event and VALUE gives the value of the event. In total, there are 330,712,483 rows in the chartevents table.
 
@@ -214,11 +218,11 @@ ITEMID & Count   & Item Name                   &  &  \\ \cline{1-3}
 The below figure shows the occurrences for the 300 most commonly appearing items. 
 \begin{figure}[H]
 \centering\caption{Number of Data Points for Most Common Items}
-\includegraphics[scale=0.45]{Number of Data Points for Most Common Items.png}
+\includegraphics[scale=0.5]{Number of Data Points for Most Common Items.png}
 \label{Number of Data Points for Most Common Items)}
 \end{figure}
 
-While there is a lot of data available in MIMIC-III, unfortunately a significant amount of it cannot be used in this study. This is due to the nature of the problem where we are using daily data, meaning only 1 record can remain for each feature for each patient for each day.  All data points from the same day for the same feature for the same patient are dropped except for the first element found in the dataset. Using only 1 point per day has a significant effect on the amount of available data, and also introduces the problem of missing data.
+While there is a lot of data available in MIMIC-III, unfortunately a significant amount of it cannot be used in this study. This is due to the nature of the problem where we are using daily data, meaning only 1 record can remain for each feature for each patient for each day.  All data points from the same day for the same feature for the same patient are dropped except for the first element found in the dataset. This was chosen as it should result in a wide range of values, whereas choosing the min or max may not. Future work would be to use the average value instead as it seems standard for similar studies \cite{KajiLSTM,ICUBidirectionalLSTM}. Using only 1 point per day has a significant effect on the amount of available data, and also introduces the problem of missing data.
 
 The below table shows how the count is affected. Counts now represent the number of measurements when there can only be 1 measurement per day per patient. The number of measurements for the top item has decreased by an order of magnitude. Also, all Metavision items are no longer present in the most common list, in fact there are no Metavision items in the top 90 most common elements. This suggests that the Metavision data is of a higher temporal resolution, and that a higher temporal dataset may be possible using this subset of MIMIC-III.
 
@@ -246,7 +250,7 @@ The below figure is analogous to Figure \ref{Number of Data Points for Most Comm
 
 \begin{figure}[H]
 \centering\caption{Number of Data Points (Once Per Day per Patient)}
-\includegraphics[scale=0.45]{Number of Data Points (Once Per Day per Patient).png}
+\includegraphics[scale=0.5]{Number of Data Points (Once Per Day per Patient).png}
 \end{figure}
 
 \subsection{Feature Selection and Missingness}
@@ -255,7 +259,7 @@ In order to create a usable dataset, features must be judiciously chosen. There 
 
 \begin{figure}[H]
 \centering\caption{Days of Full Data}
-\includegraphics[scale=0.45]{Days of Full Data.png}
+\includegraphics[scale=0.65]{Days of Full Data.png}
 \end{figure}
 
 The $y$-axis represents the number of full days of data, and the $x$-axis is the number of the most commonly appearing features used. For example, the point (3, 228383) means that if you want to make a dataset using the 3 most common features (see Table \ref{Most Common Items (Once per Day per Patient)} to see these features), you will have 228383 days of data. Patient days with any missing data features are not included. The point (0, 352325) shows that there are 352325 different combinations of days and patients in the database.
@@ -274,9 +278,9 @@ More important features for performing machine learning are included. HADM\_ID i
 
 As well as the above features, comorbidities can also be strong predictors of mortality. The following commodities were found in MIMIC from looking at ICD-9 codes in the DIAGNOSES\_ICD table: Chronic kidney disease, obesity, heart disease, asthma. The corresponding ICD-9 codes can be found in the `get\_all\_diagnoses' function in `process\_mimic.py' (See Appendix A). 
 
-The next step of data processing is ensuring that, for each hospital admission, the ``final day" of data is complete, i.e. the day before discharge or death. However, the other days in a patients stay are not required. For example, a patient who has a stay of two weeks can have any days missing except for the final day. This requirement was done because of how critical the final days data is to this project. However it comes at a cost, as this single step decreases the number of hospital admissions in the data set from 21443 to 2935. Combining this with requiring a complete sequence removes too much data, and so isn't done. 
+The next step of data processing is ensuring that, for each hospital admission, the ``final day" of data is complete, i.e. the day before discharge or death. However, the other days in a patient's stay are not required. For example, a patient who has a stay of two weeks can have any days missing except for the final day. This was required because of how critical the final day data is to this project. However it comes at a cost, as this single step decreases the number of hospital admissions in the data set from 21443 to 2935. Combining this with requiring a complete sequence removes too much data, and so isn't done. 
 
-Finally, outliers are removed by removing all rows with data points having a z-score $>$ 4. This is done to remove very extreme outliers, which were most likely problems with data entry or incorrect units of measurement.
+Finally, outliers are removed by removing all rows with data points having a z-score $>$ 4. This is done to remove extreme outliers, which were most likely problems with data entry or incorrect units of measurement.
 
 After processing, this data is saved in a flat file csv. 
 
@@ -284,17 +288,17 @@ After processing, this data is saved in a flat file csv.
 
 After the data processing, there are 2870 unique patient admissions. This represents a total of 15097 days of complete data, with 21 features.
 
-The below figure shows the length of each patients' ICU stays. Clearly, most of the data in the dataset is from single day hospital admissions. Also, is it clear that the distribution between patients who died and patients who survived is different, and patients who died had a longer hospital stay on average (12.1 days compared to  9.3 days).
+The below figure shows the length of each patients' ICU stays. Clearly, most of the data in the dataset is from single day hospital admissions. Also, it is clear that the distribution between patients who died and patients who survived is different, and patients who died had a longer hospital stay on average (12.1 days compared to  9.3 days).
 
 \begin{figure}[H]
 \centering\caption{Number of Outcomes at Each Day}
-\includegraphics[scale=0.45]{Number of Outcomes at Each Day.png}
+\includegraphics[scale=0.5]{Number of Outcomes at Each Day.png}
 \end{figure}
 The below figure shows the number of data points at each day. Day 1 has more data available than day 0 because many patients do not have complete admission data available. For the purposes of this study, admission data is data from the first day in the sequence. This figure shows that there are a significant number of data points at later days, for example there are 431 patients with an ICU stay longer than or exactly 10 days.
 
 \begin{figure}[H]
 \centering\caption{Number of Data Points for each Day}
-\includegraphics[scale=0.45]{Number of Data Points for each Day.png}
+\includegraphics[scale=0.5]{Number of Data Points for each Day.png}
 \end{figure}
 The imbalance between discharge and death is large. Out of all 2870 patients, 1977 were discharged alive while 893 died. Discharged patients represent 68.8\% of the population. Therefore, an accuracy of 68.8\% could be achieved through guessing discharge. This number will form a minimum baseline for prediction accuracy. Note that the mortality in this subset is much higher than the in-hospital mortality rate of 11.5\% in the MIMIC-III study \cite{MIMICIIIdatabase}. 
 
@@ -302,14 +306,14 @@ Below is a correlation matrix, showing all features used for prediction, as well
 
 \begin{figure}[H]
 \centering\caption{Correlation Matrix}
-\includegraphics[scale=0.45]{Correlation Matrix.png}
+\includegraphics[scale=0.46]{Correlation Matrix.png}
 \end{figure}
 
 An example histogram of Heart rate is shown below. The distribution of heart rate between death and discharge appear to be different. Histograms for all features can be found in the notebook `MIMIC death.ipynb' (See Appendix A).
 
 \begin{figure}[H]
 \centering\caption{Histogram for Heart Rate}
-\includegraphics[scale=0.45]{Histogram for Hr.png}
+\includegraphics[scale=0.5]{Histogram for Hr.png}
 \end{figure}
 
 Code for this section is in the repository under the `mimic' folder which contains the python file `process\_mimic.py'. The dataset is created in the notebook `MIMIC dataset.ipynb'. (See Appendix A)
@@ -330,13 +334,13 @@ Also, random forests with varying amounts of data will be trained. For example, 
 Firstly, for model training and evaluation, a 20\% split test and train set was created. The training set contains 2296 admissions and 12310 days of data, while the test set has the remaining 574 admissions and 2787 days. This same dataset split will be used for both different types of models. 
 
 \subsubsection{Random Forest}
-XGBoost is chosen as the random forest framework \cite{XGBoost}. This is a popular gradient boosted method. 
+XGBoost is chosen as the random forest framework \cite{XGBoost}. This is a gradient boosted method that is fast, well suited for structured data and a popular choice for machine learning and data mining challenges \cite{XGBoostUsage}. 
 
 The first random forest experiment is to use admission data. Various lengths of admission data is used. For example, 1 day admission means only the information from the first day is used, 2 day admission means data from the first two days is used, etc. Note that for $n$ day admission data, ICU stays that are less than $n$ in length cannot be used. Therefore, increasing the number of days will decrease the data available. The below figure shows this.
 
 \begin{figure}[H]
 \centering\caption{Random Forest Admission Data}
-\includegraphics[scale=0.45]{Random Forest Admission Data.png}
+\includegraphics[scale=0.52]{Random Forest Admission Data.png}
 \label{Random Forest Admission Data}
 \end{figure}
 
@@ -346,10 +350,10 @@ For each different number of days of data, the model is recreated and trained. T
 
 \begin{figure}[H]
 \centering\caption{Random Forest Admission}
-\includegraphics[scale=0.45]{Random Forest Admission.png}
+\includegraphics[scale=0.52]{Random Forest Admission.png}
 \label{Random Forest Admission}
 \end{figure}
-The above figure shows the random forests performance as the number of days of admission data increases. 
+The above figure shows the random forest's performance as the number of days of admission data increases. 
 
 The f1 score for the death class on the test set is also featured in the above figure. The f1 score shows how a model performs on an individual class, and is calculated using the precision and recall of that class. The f1 score for death is very low for the first few days of data when compared to the accuracy, suggesting the model is much better at predicting if the patient discharged successfully. However, as the death and discharge percentage approach 50\%, the f1 score begins to converge on the test accuracy, meaning both classes performed equally. %This shows the difficulty of dealing with class imbalance problems.
 
@@ -359,12 +363,10 @@ The next experiment tests a similar problem, where instead of admission data you
 
 \begin{figure}[H]
 \centering\caption{Random Forest Discharge}
-\includegraphics[scale=0.45]{Random Forest Discharge.png}
+\includegraphics[scale=0.52]{Random Forest Discharge.png}
 \label{Random Forest Discharge}
 \end{figure}
 Note that these random forest models attain significantly higher accuracy when compared to the admission models. For example, the 1 day admission data model accuracy is 78\%, while the 1 day discharge data is 84\%.
-
-% TODO sample confusion matricies of 1 day for both of thesse?
 
 Code for these experiments can be found in the `MIMIC death RF' notebook. 
 
@@ -378,7 +380,7 @@ An LSTM layer is added next. This layer takes a 3D input from the previous layer
 
 \begin{figure}[H]
 \centering\caption{LSTM Model Diagram with Hidden Dense Layer}
-\includegraphics[scale=0.4]{Small Model with dense.png}
+\includegraphics[scale=0.43]{Small Model with dense.png}
 \label{LSTM Model Diagram with Hidden Dense Layer}
 \end{figure}
 The chosen hyper-parameters are 128 for the LSTM vector output size and an Adam optimizer with a learning rate of 0.0005 and an epsilon of 1e-8. Models are trained for 70 epochs.
@@ -389,43 +391,37 @@ This instability problem is observed in this project. A total of 102 models, eac
 
 \begin{figure}[H]
 \centering\caption{LSTM instability}
-\includegraphics[scale=0.4]{LSTM instability.png}
+\includegraphics[scale=0.52]{LSTM instability.png}
 \end{figure}
-% It is hypothesised that in this case, the problem is caused by differences in sequence lengths in batches during training. TODO
-
 The architecture without the extra hidden dense layer was also evaluated. The architecture is the same as in Figure \ref{LSTM Model Diagram with Hidden Dense Layer} but without the dense\_6 layer. 
 
 This model proved to be much more stable. In 129 iterations, only one model had a training accuracy 2\% greater than the test accuracy. The mean test accuracy is \%85 with a standard deviation of 1.6\%. This is compared to the previous model, with a mean test accuracy of 83\% and a standard deviation of 3\%. However, the models training accuracy was slightly decreased, from 85.6\% to 85\%. The below figure shows the box and whisker plot for all 129 models.
 
 \begin{figure}[H]
 \centering\caption{LSTM instability no hidden}
-\includegraphics[scale=0.4]{LSTM instability no hidden.png}
+\includegraphics[scale=0.52]{LSTM instability no hidden.png}
 \end{figure}
 Due to the significantly decreased chance of overfitting and greatly decreased variance, the model with no hidden dense layer will be used for future experiments. 
 
 Next, a single model must be chosen which will be used for future experiments. The next trained model better than 70\% of the previous 129 models was chosen. This model has a test accuracy of 86.8\% and an AUC of 91\%. It has an f1 score for death of 0.75 and for discharge 0.91. This difference between f1 scores is due to the class imbalance. The model can achieve a higher accuracy in the discharge class due to a larger amount of data. Note that class weights have been used during training. 
 
-% This difference between accuracy scores could be due to a difference between the test and train set, such as a difference in average sequence length (TODO).
-
 The below figure shows how accuracy is affected by increasing the sequence length of the test set from admission. This is comparable to Figure \ref{Random Forest Admission} except that in this case, the model is not retrained at every different length. 
 The model is trained to, given a complete time series, predict if the patient died. Therefore, the model can only be expected to perform well on complete sequences. The percentage of complete sequences is the green line. Out of these complete sequences, the percentage of patients discharged is shown in orange. As the days of admission data increases, this converges to the baseline accuracy for always guessing discharged. Note that this does not represent the baseline accuracy, as incomplete sequences are also evaluated. 
 \begin{figure}[H]
 \centering\caption{LSTM Admission Data}
-\includegraphics[scale=0.4]{LSTM Admission Data.png}
+\includegraphics[scale=0.52]{LSTM Admission Data.png}
 \end{figure}
 
 The below figure shows the effect of increasing the sequence length of the data, but from the end of the sequence instead of the start (as in the above figure).
 
 \begin{figure}[H]
 \centering\caption{LSTM Accuracy Using Number of Days from Discharge or Death}
-\includegraphics[scale=0.4]{LSTM Accuracy Using Number of Days from Discharge or Death.png}
+\includegraphics[scale=0.52]{LSTM Accuracy Using Number of Days from Discharge or Death.png}
 \label{LSTM Accuracy Using Number of Days from Discharge or Death}
 \end{figure}
-%TODO future work, compare overfit or less accurate explanations?
-
 Code for this experiment can be found in the `MIMIC death' notebook. 
 
-\subsection{Discussion}
+\subsection{Comparison}
 
 The LSTM has an accuracy of 87\% compared to the random forests accuracy of 84\%. This is a significant increase for machine learning, and was expected since the LSTM has access to more data and therefore should have more predictive power. However, the f1 scores for death are very similar. The LSTM had an f1 score of 0.75 for the death class and 0.91 for the discharge class, while the RF had an f1 score of 0.74 for death and 0.89 for discharge.
 
@@ -452,9 +448,9 @@ There are three properties that SHAP is shown to show in \cite{SHAP}. The first 
 
 There are different versions of SHAP made for different purposes. The SHAP versions of interest in this paper are TreeExplainer and Kernel SHAP. Both of these methods require a model, which is any python function for Kernel SHAP and an XGBoost model for TreeExplainer. SHAP also always requires a dataset which are the points that will be explained. In the following sections, the test set is used for this.
 
-Kernel SHAP is a the model agnostic version of SHAP. In order to use Kernel SHAP, a background dataset is required. This is used to simulate a `missing' feature by replacing the value with those in the background dataset, which lets SHAP observe the change in the model and calculate the features importance (From the SHAP documentation for KernelExplainer \cite{SHAP}).
+Kernel SHAP is a model agnostic version of SHAP. In order to use Kernel SHAP, a background dataset is required. This is used to simulate a `missing' feature by replacing the value with those in the background dataset, which lets SHAP observe the change in the model and calculate the features importance (From the SHAP documentation for KernelExplainer \cite{SHAP}).
 
-TreeExplainer was first introduced in \cite{SHAPInteraction} and detailed further in \cite{TreeExplainer}. It is an optimized version of SHAP made for random forests, and works with random forests created with XGBoost. It is of special interest due to the ability to calculate interaction values, which quantify how features interact with other features. This approach also doesn't require a background dataset, instead it creates a background distribution from following the individual trees and finding how many samples visit each leaf (From the documentation on TreeExplainer \cite{SHAP}).
+TreeExplainer was first introduced in \cite{SHAPInteraction} and detailed further in \cite{TreeExplainer}. It is an optimized version of SHAP made for random forests, and works with random forests created with XGBoost. It is of special interest due to the ability to calculate interaction values, which quantify how features interact with other features. This approach also doesn't require a background dataset, instead it creates a background distribution from following the individual trees and finding how many samples visit each leaf (From the documentation on TreeExplainer \cite{SHAP}). TreeExplainer is used on an XGBoost model trained to predict mortality in \cite{TreeExplainerXGBoost}.
 
 Firstly, Kernel SHAP is used on the time series data. A modified version of Kernel SHAP is created to better suit time series data and is investigated. Finally, TreeExplainer is used to explain the predictions from the random forests from the previous section. 
 
@@ -468,14 +464,14 @@ SHAP is now run for every data point, which takes approximately 37 minutes. The 
 
 \begin{figure}[H]
 \centering\caption{SHAP Explanation Example}
-\includegraphics[scale=0.35]{SHAP individual explanation.png}
+\includegraphics[scale=0.38]{SHAP individual explanation.png}
 \end{figure}
 
 The below figure shows the global explanations. These are formed by taking every SHAP value for every feature, plotting the value and shading the point by the feature value. This can help create global explanations such as that decreasing HCO3 increases likelihood of mortality, older patients are at a greater risk and a higher heart rate is associated with a higher mortality rate. However, there appears to be a more complex relationship for platelet count, where low values increase the likelihood of mortality but so do very high values.
 
 \begin{figure}[H]
 \centering\caption{Vanilla SHAP Global Explanations}
-\includegraphics[scale=0.4]{Vanilla SHAP Global.png}
+\includegraphics[scale=0.49]{Vanilla SHAP Global.png}
 \label{Vanilla SHAP Global}
 \end{figure}
 
@@ -484,12 +480,12 @@ The importance is quantified by calculating the mean absolute SHAP value, as can
 
 \begin{figure}[H]
 \centering\caption{SHAP Feature Importance }
-\includegraphics[scale=0.4]{Vanilla SHAP Feature Importance.png}
+\includegraphics[scale=0.49]{Vanilla SHAP Feature Importance.png}
 \end{figure}
 
 \cite{ICUFancyLSTM} also uses vanilla SHAP to create global explanations. They find similar trends for age, heart rate, creatinine and platelets. However, the importance of these features are different to the results obtained in this study. Age is the most important feature (i.e. appears on top in the global explanation figure), followed by heart frequency, creatinine and platelets.
 
-This paper also finds that comorbidities have a lesser effect than the majority of bio-marker features, and some result in a lower mortality rate. This paper concludes that this is likely due to the model being unable to learn meaningful relationships due to the small number of patients with comorbidities.
+This paper also finds that comorbidities have a lesser effect than the majority of bio-marker features, and some result in a lower mortality rate. This paper concludes that this might be due to the model being unable to learn meaningful relationships since there are a small number of patients with comorbidities in the dataset. Another possible cause is that patients die early in their ICU stay due to physiological derangements caused by the comorbidities, making the comorbidities themselves less discriminating \cite{ICUFancyLSTM}.
 
 SHAP can be used to show more interesting global relationships. The below figure shows plots for the top 4 most important features for this model (see Figure \ref{Vanilla SHAP Global}), as previously seen in Figure \ref{SHAP Example Systolic BP}. Note that the axis are different for each subplot. Similar plots for all other features can be found in (Appendix A).
 
@@ -534,7 +530,7 @@ An example of this is featured below. The model predictions are calculated from 
 
 \begin{figure}[H]
 \centering\caption{SHAP Local Explanation Example}
-\includegraphics[scale=0.4]{Vanilla SHAP local1.png}
+\includegraphics[scale=0.5]{Vanilla SHAP local1.png}
 \label{SHAP Local Explanation Example}
 \end{figure}
 
@@ -542,11 +538,11 @@ The below shows the same trend as the above but for the first 20 sequences in th
 
 \begin{figure}[H]
 \centering\caption{SHAP Local Explanation Examples}
-\includegraphics[scale=0.4]{Vanilla SHAP local2.png}
+\includegraphics[scale=0.5]{Vanilla SHAP local2.png}
 \label{SHAP Local Explanation Examples}
 \end{figure}
 
-This shows that the local accuracy property of SHAP is broken, and therefore that the local explanations do not match the model.
+This shows that the local accuracy property is not held, and therefore the local explanations do not match the model.
 
 \subsubsection{Time Series SHAP Modifications}
 
@@ -558,8 +554,9 @@ Firstly, modifications to the model had to be made. It must be able to take the 
 
 \begin{figure}[H]
 \centering\caption{Updated LSTM Model}
-\includegraphics[scale=0.25]{BIG model.png}
+\includegraphics[scale=0.26]{BIG model.png}
 \end{figure}
+
 Note that the model is still able to take arbitrary length sequences. The hidden state is only used at the first element in the sequence, and the hidden state is only returned from the last element. There are now two ways to run the model on time series data: Inputting the entire time series of length N with an empty initial state. Running the model N times, once with each day of data, using an empty initial state for the first day, and on subsequent days using the returned hidden state from the previous day.
 
 The SHAP function `shap\_values' was extended to take an extra argument, `association', as well as the existing X argument for the dataset. `association' is an array where the $i$th element is the ID of the sequence that the $i$th piece of data in X belongs to. For example, if the first two time points in the dataset X correspond to the same time series, the association array could be [1,1], or anything as long as the first two values in are equal. In this dataset, the `HADM\_ID' from each element is used as the association array.
@@ -590,20 +587,23 @@ This validation is done for the ICU dataset.
 
 \textbf{Property 2 - Missingness}
 
-This property is described as follows. ``If the inputs represent feature presence, then missingness requires features missing in the original input to have no impact''\cite{SHAP}. This property is used when calculating the SHAP value. To determine the impact of a feature, that feature is set to "missing" and the change in the model output is observed (From the SHAP documentation for KernelExplainer \cite{SHAP}). In practice, this is simulated by replacing the feature with values from the background dataset. Interestingly, this property is not satisfied in Figure \ref{Vanilla SHAP Global Features} for platelet count, as there is no value that acts as a missing input.
+This property is described as follows. ``If the inputs represent feature presence, then missingness requires features missing in the original input to have no impact''\cite{SHAP}. This property is used when calculating the SHAP value. To determine the impact of a feature, that feature is set to ``missing" and the change in the model output is observed (From the SHAP documentation for KernelExplainer \cite{SHAP}). In practice, this is simulated by replacing the feature with all values from the background dataset. 
+% Interestingly, this property is not satisfied in Figure \ref{Vanilla SHAP Global Features} for platelet count, as there is no value that acts as a missing input.
 
 This property cannot be satisfied in general for time series models due to the presence of the hidden state. An example that would be impossible to satisfy is a model that counts the length of a time series. Every data point will increase the prediction by 1, meaning that if there is only 1 feature the SHAP value will be 1 no matter what the input is.
+
+Even though the property fails in general, it is possible that setting a feature to ``missing'' throughout the entire time series could provide a way to measure feature ``missingness''. This would however require significant changes to SHAP and was not investigated in this study.
 
 \textbf{Property 3 - Consistency}
 
 This property is described as follows \cite{SHAP}. ``Consistency states that if a model changes so that some simplified input’s contribution increases or stays the same regardless of the other inputs, that input’s attribution should not decrease.'' 
 
-In order to find if the contribution increases or stays the same regardless of the other inputs, this property relies on the missingness property. This means that this property also cannot satisfied in general.
+In order to find if the contribution increases or stays the same regardless of the other inputs, this property relies on the missingness property. This means that this property also cannot be satisfied in general. However, as in Property 2 it is possible that in some cases this property could hold if further modifications are made to SHAP. 
 
 \textbf{Addition LSTM}
 
 The new SHAP is evaluated using a simple addition LSTM model. This addition LSTM is designed to add numbers in a sequence and return the result. The model has two features, the first is a random integer between 0 and 10, and another feature that is always 1. 
-The extra feature is added both to test SHAPs behaviour and also to differentiate between an empty feature and a value of 0. The LSTM is trained to add all of these numbers together. 
+The extra feature is added both to test SHAP's behaviour and also to differentiate between an empty feature and a value of 0. The LSTM is trained to add all of these numbers together. 
 
 The training set is created with sequences of a random length between 1 and 10. The training and test sets both are created with 1000 sequences. The same LSTM as in Section \ref{LSTM} is used, however the loss is now mean squared error since this is a regression problem. The model attains a mean squared error of 0.7 on the train set and 0.3 on the test set.
 
@@ -612,13 +612,13 @@ Since all these groups have the same colour (i.e. feature value), it is clear th
 
 \begin{figure}[H]
 \centering\caption{Addition LSTM Global Explanations}
-\includegraphics[scale=0.4]{Sanity Old Global.png}
+\includegraphics[scale=0.5]{Sanity Old Global.png}
 \end{figure}
 This is also shown in the below figure. 
 
 \begin{figure}[H]
 \centering\caption{Addition LSTM Global Explanation for Feature 0}
-\includegraphics[scale=0.5]{Sanity Old Global Feature.png}
+\includegraphics[scale=0.7]{Sanity Old Global Feature.png}
 \end{figure}
 As before, the local explanations do not match the actual models output. This can be seen in the figure below, which shows the SHAP values (y axis) for the different element ID (x axis). The LSTM is adding the sequence (7,0,7,1,8,1,2,3,7). Note that the feature switches from red to blue depending on which side of the expected value the result is, and feature 1 has no effect. 
 
@@ -628,19 +628,19 @@ As before, the local explanations do not match the actual models output. This ca
 \label{Sanity Old Local}
 \end{figure}
 
-The results are very different for the new SHAP. Since the new SHAP adheres to the local accuracy property, the same input will no longer have the same SHAP value. This is because the output will depend on what elements the LSTM has already seen. For example, if the previous sum is 5 and the new SHAP value is 0, the model will output 6 for the new element, which means the features must have a SHAP value of 6.
+The results are very different for the new SHAP. Since it adheres to the local accuracy property, the same input will no longer have the same SHAP value. This is because the output will depend on what elements the LSTM has already seen. For example, if the previous sum is 5 and the new SHAP value is 0, the model will output 6 for the new element, which means the features must have a SHAP value of 6.
 
 This behaviour is shown in the below figure. The expected value from SHAP is now 5.5. Clusters of matching SHAP values can still be seen. However, there is now no longer a clear relationship between feature value and SHAP value. Note that Feature 1 still has no importance. 
 
 \begin{figure}[H]
 \centering\caption{Addition LSTM New SHAP Global Explanations}
-\includegraphics[scale=0.4]{Sanity New Global.png}
+\includegraphics[scale=0.5]{Sanity New Global.png}
 \end{figure}
 This is shown more clearly in the below figure. When Feature 0 is 0, the SHAP value can be anywhere up to 50. 
 
 \begin{figure}[H]
 \centering\caption{Addition LSTM New SHAP Global Explanation for Feature 0}
-\includegraphics[scale=0.5]{Sanity New Global Feature.png}
+\includegraphics[scale=0.7]{Sanity New Global Feature.png}
 \end{figure}
 While the global explanations are not functional, the local explanations are correct across an entire time series, as can be seen below. This is the same sequence as in\ref{Sanity Old Local}
 
@@ -663,7 +663,7 @@ The global explanations for the same model as in Section \ref{Time Series SHAP} 
 
 \begin{figure}[H]
 \centering\caption{New SHAP Global Explanations}
-\includegraphics[scale=0.35]{New SHAP Global.png}
+\includegraphics[scale=0.5]{New SHAP Global.png}
 \end{figure}
 
 However, the below individual plots for features show the problems that the new SHAP has. Specifically, the mean value for HCO3, heart rate and age no longer have 0 SHAP value. The most important interactions are also different.
@@ -731,13 +731,13 @@ The first experiment is running the admission random forest that uses only first
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Global Explanations Admission}
-\includegraphics[scale=0.4]{TreeExplainer Admission1 Global.png}
+\includegraphics[scale=0.5]{TreeExplainer Admission1 Global.png}
 \end{figure}
 The features that are deemed important are different to the LSTM from the previous section. Age now has the highest impact on the model. It makes sense why the model would find age more relevant to death since the age is constant throughout the ICU stay, but the biomarker features are likely to be very different from day 1 to the final day. The importance of all features are shown below. Interestingly, weight has a lesser effect than that of the LSTM. This could be due to the lack of interactions formed between weight and other features.
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Feature Importance Admission}
-\includegraphics[scale=0.4]{TreeExplainer Admission1 Feature Importance.png}
+\includegraphics[scale=0.49]{TreeExplainer Admission1 Feature Importance.png}
 \end{figure}
 % It is possible that the model is only accurate for short time series (i.e. 1 day time series). 
 The top 4 features are shown below. Similar trends are noticed for heart rate, age and HCO3 when compared to Figure \ref{Vanilla SHAP Global Features}. However, the lines are less smooth and are not as continuous as they were before. This could be due to the nature of the decision boundaries of random forests, which can be very sharp. However, it is likely due to the model being trained with insufficient data, as the XGBoost survival model featured in \cite{SHAPInteraction} does not have this discontinuity problem. There are also significantly less data points in the test set for this problem, only 574 compared to the LSTM's 2787. 
@@ -775,10 +775,9 @@ The top 4 features are shown below. Similar trends are noticed for heart rate, a
 
 This experiment is more directly comparable with the LSTM, as it is predicting if the patient died after these readings. This random forest also had a much higher accuracy than the admission random forest by 6\%. 
 
-
 \begin{figure}[H]
 \centering\caption{TreeExplainer Global Explanations Final Day}
-\includegraphics[scale=0.4]{TreeExplainer Final1 Global/TreeExplainer Final1 Global.png}
+\includegraphics[scale=0.5]{TreeExplainer Final1 Global/TreeExplainer Final1 Global.png}
 \end{figure}
 The trends (the general shape of the curves) for HCO3, platelet count, age, and heart rate are similar to Figure \ref{Vanilla SHAP Global Features}. However, the trends for creatinine and SaO2 are different. The SHAP values for creatinine in particular have a much larger range. SaO2 has the opposite trend, where a higher SaO2 increases mortality.
 
@@ -786,7 +785,7 @@ The feature importance also differs from the LSTM. Creatinine is one of the most
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Feature Importance Final Day}
-\includegraphics[scale=0.4]{TreeExplainer Final1 Global/TreeExplainer Final1 Feature Importance.png}
+\includegraphics[scale=0.5]{TreeExplainer Final1 Global/TreeExplainer Final1 Feature Importance.png}
 \end{figure}
 As before, the top 4 features are shown.
 
@@ -857,7 +856,7 @@ An example interaction plot between creatinine and HCO3 is shown below. This plo
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Interaction between Creatinine and HCO3}
-\includegraphics[scale=0.5]{TreeExplainer Final1 Global/TreeExplainer Final1 Interaction Creatinine HCO3.png}
+\includegraphics[scale=0.7]{TreeExplainer Final1 Global/TreeExplainer Final1 Interaction Creatinine HCO3.png}
 \end{figure}
 
 \textbf{Final 2 Days of Data}
@@ -866,20 +865,18 @@ In this experiment, the final 2 days of data is used. Day 1 is the data from the
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Global Explanations Final 2 Days}
-\includegraphics[scale=0.4]{TreeExplainer Final2/TreeExplainer Final2 Global.png}
+\includegraphics[scale=0.47]{TreeExplainer Final2/TreeExplainer Final2 Global.png}
 \end{figure}
 
 As expected, the day 2 features have a much greater impact on the model output than those of day 1. The trends for the same feature on different days have the same appearance overall. For example, a low HCO3 increases mortality and a high HCO3 decreases mortality. The quantified feature importance is featured below.
 
 \begin{figure}[H]
 \centering\caption{TreeExplainer Feature Importance Final 2 Days}
-\includegraphics[scale=0.4]{TreeExplainer Final2/TreeExplainer Final2 Feature Importance.png}
+\includegraphics[scale=0.45]{TreeExplainer Final2/TreeExplainer Final2 Feature Importance.png}
 \label{TreeExplainer Feature Importance Final 2 Days}
 \end{figure}
 
 The individual feature plots are very similar to those in Figure \ref{SHAP Final1 Explanations for Individual Features}. There are minor differences which could be caused by the difference between the two datasets. 
-
-%TODO add it? ez filler
 
 We can investigate whether or not the model is learning the relationships between the days. One hypothesis for the decrease in accuracy when increasing the days of data is that the random forest cannot learn the relationship between the days. The LSTM is forced to learn this relationship due to it's architecture, but the random forest is not. Interaction between day 2 and day 1 variables. This mimics the way LSTMs work, where features on day 2 interact with previous values, not visa versa.
 
@@ -922,16 +919,22 @@ Since the random forest is able to handle all features from multiple days at onc
 
 It is possible that there are many other significant relationships that SHAP interaction plots can show. However, it is unreasonable to interrogate them all. For example, for a 1 week ICU stay with 16 features per day means there will be a total of 112 features, therefore a total of 12544 interactions. Even using 2 days of data has 1024 interactions. This highlights one problem with trying to get detailed explanations for long time series. Even an ideal explainability method that could show the relationship between every feature in the time series so far, it would not be feasible for anyone to check them all. However, if the interactions can be quantified, finding only the most important interactions would be possible.
 
-\subsection{Discussion}
 
-It is found that SHAP is very useful for explaining relationships between features and outputs on a global scale. One of the aims of explainablility is to be able to validate or invalidate a model. SHAP makes this easy to do on a high level, as it can be easily discovered if the model has learned a nonsensical relationship. 
+\section{Discussion}
 
-The proposed modifications to SHAP provide local accuracy for entire time series at a cost to the strong theoretical justification of SHAP and global explanations. The Addition LSTM is shown to have meaningless global explanations with the new SHAP but meaningful local explanations. A hybrid use of vanilla SHAP for global explanations and new SHAP for local explanations could be of interest.
+The first step in this project was to create a dataset for machine learning. This was done using the MIMIC-III dataset. In order to create the final dataset, a certain subset of features were chosen. These features were chosen due to the number of data points present in the dataset. It was also decided that no imputation would be done in order to simplify the dataset creation.
+
+However, the lack of imputation is a significant limitation. This meant that the study is only using a specific subset of the data, which may have introduced a bias. Clearly there is a larger mortality rate in the final dataset (31\%) compared to the in-hospital mortality rate of all sites in the MIMIC-III study (11.5\%). In future, the MICE method could be used to investigate such biases \cite{MICE}. One example of doing data imputation that considers correlation between features in an ICU data setting is \cite{ICUMortalityImpute}.
+
+Random forests were created and trained on different amounts of admission or final days of data. Random forests trained on longer time series consistently had a lower accuracy than random forests trained on smaller time series. This is because in the created dataset, the longer the sequence, the less data that is of at least that length. This highlights a further advantage of using time series models, that they are able to use data from every ICU stay, regardless of length.
+
+Two different LSTM models were trained. It was found that a model with an extra hidden layer generalized poorly, while the model without generalized very well. It was also found that the model was not using only the last day of data to make it's prediction. As expected, the LSTM performed better than any of the random forests. 
+
+It is found that SHAP is very useful for explaining relationships between features and outputs on a global scale. One of the aims of explainablility is to be able to validate or invalidate a model. SHAP makes this easy to do on a high level, as it can be easily discovered if the model has learned a nonsensical relationship. However, local explanations are incorrect.
+
+The proposed modifications to SHAP provide local accuracy for entire time series at a cost to the strong theoretical justification of SHAP and global explanations. The Addition LSTM is shown to have meaningless global explanations with the new SHAP but meaningful local explanations. It is proposed that a hybrid system using vanilla SHAP for global explanations and using the new SHAP for local explanations could be used together.
 
 It was found that most of the features from the random forests investigated had the same trends. The extra functionality (extracting interactions between features) from TreeExplainer was also investigated, and found to provide rich global explanations. Sensible explanations are also mostly obtained from running a random forest with multiple days of the same features. 
-
-% e.g. compare explanations to medical knowledge, try find weird explanations etc.
-% make some conclusions about the model too!
 
 It was found that the explanations from the final day random forest and the LSTM are similar. Future work would involve finding if these relationships are sound in the context of the ICU.
 
@@ -943,23 +946,7 @@ This highlights a trade off between greater accuracy and better explanations, si
 
 Another distinction between random forests and LSTMs highlighted in this section is the run time for SHAP. Kernel SHAP takes nearly 40 minutes to run, while TreeExplainer takes less than 1 second for a quarter of the data. This is due to the simplicity of the random forest compared to the LSTM. Note that these run times are on a CPU, however attempts to run the LSTM on a GPU failed. 
 
-\section{Discussion}
-
-The first step in this project was to create a dataset for machine learning. This was done using the MIMIC-III dataset. In order to create the final dataset, a certain subset of features were chosen. These features were chosen due to the number of data points present in the dataset. It was also decided that no imputation would be done in order to simplify the dataset creation.
-
-However, the lack of imputation is a significant limitation. This meant that the study is only using a specific subset of the data, which may have introduced a bias. Clearly there is a larger mortality rate in the final dataset (31\%) compared to the in-hospital mortality rate of all sites in the MIMIC-III study (11.5\%). In future, the MICE method could be used to investigate such biases \cite{MICE}. 
-
-Random forests were created and trained on different amounts of admission or final days of data. Random forests trained on longer time series consistently had a lower accuracy than random forests trained on smaller time series. This is because in the created dataset, the longer the sequence, the less data that is of at least that length. This highlights a further advantage of using time series models, that they are able to use data from every ICU stay, regardless of length.
-
-Two different LSTM models were trained. It was found that a model with an extra hidden layer generalized poorly, while the model without generalized very well. It was also found that the model was not using only the last day of data to make it's prediction. As expected, the LSTM performed better than any of the random forests. 
-
-Three different experiments were done involving SHAP. This includes running SHAP with the LSTM without considering interactions within individual time series sequences. Global explanations are found to be useful and rich. However, it is found that local explanations are incorrect.
-
-A modified version of SHAP is proposed that handles time series data by keeping track of internal state within sequences. Modifications to the SHAP library were created and a new general API was proposed. While these modifications break some ideal properties, it satisfies the local accuracy property on the scale of entire time series. 
-
-An example is shown where this new method does not provide useful global explanations. It is proposed that a hybrid system using vanilla SHAP for global explanations and using the new SHAP for local explanations could be used together.
-
-\section{Conclusion}
+\subsection{Conclusion}
 
 This thesis had one key aim; to see if it's possible to predict death using time series ICU data in an interpretable way.
 
@@ -973,7 +960,7 @@ While the time series model may have good accuracy and be explainable, is it use
 
 \subsection{Future Work}
 
-This study would benefit from more data, especially of longer ICU stays. This would allow the random forest experiments to become more accurate. This should be possible by doing data imputation on MIMIC-III. 
+This study would benefit from more data, especially of longer ICU stays. This would allow the random forest experiments to become more accurate. This should be possible by doing data imputation on MIMIC-III. An example of data imputation is in \cite{ICUBidirectionalLSTM}, where the average value is used if the patient has no data for a feature, otherwise the value is filled in from values of neighboring records.
 
 It is expected that a hyperparameter search could find an LSTM that has a higher accuracy. Further investigation should be done into using methods to combat the class imbalance problem, specifically oversampling of the minority class.
 
@@ -981,8 +968,9 @@ In order for this work to be more easily validated, a unified system combining b
 
 Further investigation into using SHAP to look for jumps in mortality predictions as an early warning system could be promising. 
 
+A promising way of getting around the feature ``missingness'' problem is to set features to ``missing'' throughout the entire time series. This would unfortunately require changing the SHAP implementation, so it should be investigated further before it's implemented.
 
-Try quantify LSTM dependence on counting by adding the day number as a feature
+Investigating the LSTM by retraining the model to take the number of days as a feature could allow quantifying the importance of the number of days elapsed using SHAP. 
 
 If a random forest can be trained that has a greater accuracy than the LSTM, then using TreeExplainer SHAP should be further investigated. In particular, a way to quantify the most important interactions between features should be found in order to combat the immense number of features.
 
@@ -992,9 +980,9 @@ If a random forest can be trained that has a greater accuracy than the LSTM, the
 
 \section{Appendix}
 
-\subsection{Appendix A - Repository Overview}
+\subsection{Appendix A - Repository Overview \& Supplementary Files}
 
-Code is available at \url{https://github.com/Gareth001/thesis}. Notebooks can be viewed directly inside Github without being re-run.
+Code is available at \url{https://github.com/Gareth001/thesis}. Notebooks can be viewed directly inside Github without being re-run. This repository also contains all required supplementary files, such as original files for all assessment item documents.
 
 Code to process the mimic database into a single flat file csv is found in the `mimic' folder. The remainder of the code is in the form of jupyter notebooks in the `notebooks' folder. The `MIMIC dataset.ipynb' notebook is used to further process the data into a usable dataset for machine learning. `MIMIC features.ipynb' contains some visualizations of the features available in the MIMIC 3 database.
 
@@ -1019,43 +1007,43 @@ Code is available at \url{https://github.com/Gareth001/shap}.
 
 These dictionaries map sequence ID from association array to state. `next\_hidden\_states' is used to store the state for the next application in the sequence, and `prev\_hidden\_states' stores the state fed into the previous application.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_1.png}
+\includegraphics[scale=0.45]{diff/diff_1.png}
 \end{figure}
 `model\_null' is now of a different shape due to the changes. 
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_2.png}
+\includegraphics[scale=0.45]{diff/diff_2.png}
 \end{figure}
 Add the optional association argument to the `shap\_values' function.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_3.png}
+\includegraphics[scale=0.45]{diff/diff_3.png}
 \end{figure}
 Pass through the association sequence ID if this current element (i).
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_4.png}
+\includegraphics[scale=0.45]{diff/diff_4.png}
 \end{figure}
 Modify `explain' to take a sequence index.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_5.png}
+\includegraphics[scale=0.45]{diff/diff_5.png}
 \end{figure}
 If we have a `next\_hidden\_states', then use it, otherwise this is the first element from this sequence. Modify call to `f' (the user supplied function) to pass in `internal\_state'. Finally, store the output in `next\_hidden\_states' and the previously used state into  `prev\_hidden\_states'.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_6.png}
+\includegraphics[scale=0.45]{diff/diff_6.png}
 \end{figure}
 Pass through sequence index to run call.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_7.png}
+\includegraphics[scale=0.45]{diff/diff_7.png}
 \end{figure}
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_8.png}
+\includegraphics[scale=0.45]{diff/diff_8.png}
 \end{figure}
 The model is called twice in kernel SHAP. This second call runs all of the extra samples. Therefore, we need to use the same hidden state as what we first used, which is why we save `prev\_hidden\_states'. Note that `h' and `c' must be padded to match all of these samples.
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_9.png}
+\includegraphics[scale=0.45]{diff/diff_9.png}
 \end{figure}
 \textbf{File: shap/utils/\_legacy.py}
 Model now supplies 3 outputs. 
 \begin{figure}[H]
-\includegraphics[scale=0.4]{diff/diff_10.png}
+\includegraphics[scale=0.45]{diff/diff_10.png}
 \end{figure}
 
 \end{document}
