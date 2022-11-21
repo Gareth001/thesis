@@ -107,7 +107,7 @@ sklearn==0.0
 slicer==0.0.2
 tensorboard==2.3.0
 tensorboard-plugin-wit==1.7.0
-tensorflow==2.3.0
+tensorflow==2.9.3
 tensorflow-estimator==2.3.0
 termcolor==1.1.0
 terminado==0.8.3
